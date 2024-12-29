@@ -36,7 +36,7 @@ public class RevolutConverter implements Converter {
     public void convert() {
         if (writerType.equals(BlockpitData.class)) {
             dataConverted = dataToConvert.stream().map(revolutData -> {
-                String date = revolutData.getDate();
+                String date = formatDate(revolutData.getDate());
                 String label = "";
                 String outgoingAsset = "";
                 String outgoingAmount = "";
@@ -91,6 +91,10 @@ public class RevolutConverter implements Converter {
         } else {
             throw new UnsupportedOperationException("Unknown Writer-Type");
         }
+    }
+
+    private String formatDate(String date) {
+        return date.replace(",", "");
     }
 
     private String getCurrencyFromValue(String value) {
