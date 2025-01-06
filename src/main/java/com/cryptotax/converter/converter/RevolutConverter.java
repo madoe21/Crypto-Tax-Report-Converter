@@ -1,8 +1,11 @@
 package com.cryptotax.converter.converter;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.StringUtils;
 
 import com.cryptotax.converter.data.in.RevolutData;
 import com.cryptotax.converter.data.out.BlockpitData;
@@ -32,10 +35,17 @@ public class RevolutConverter implements Converter {
         dataToConvert = reader.getData();
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void convert() {
         if (writerType.equals(BlockpitData.class)) {
-            dataConverted = dataToConvert.stream().map(revolutData -> {
+            dataConverted = new ArrayList<>();
+
+            for (RevolutData revolutData : dataToConvert) {
+                if (StringUtils.equals(revolutData.getType(), "Einsetzen")) {
+                    continue;
+                }
+
                 String date = formatDate(revolutData.getDate());
                 String label = "";
                 String outgoingAsset = "";
@@ -48,12 +58,6 @@ public class RevolutConverter implements Converter {
                 String transactionId = "";
 
                 switch (revolutData.getType()) {
-                    case "Einsetzen":
-                        label = "Withdrawal";
-                        outgoingAsset = getCurrencyFromValue(revolutData.getSymbol());
-                        outgoingAmount = BlockpitData
-                                .formatValue(removeCurrencyAndDotFromValue(revolutData.getQuantity(), outgoingAsset));
-                        break;
                     case "Verkaufen":
                         label = "Trade";
                         outgoingAsset = getCurrencyFromValue(revolutData.getSymbol());
@@ -84,10 +88,11 @@ public class RevolutConverter implements Converter {
                         break;
                 }
 
-                return new BlockpitData(date,
+                BlockpitData data = new BlockpitData(date,
                         INTEGRATION_NAME, label, outgoingAsset, outgoingAmount,
                         incomingAsset, incomingAmount, feeAsset, feeAmount, comment, transactionId);
-            }).collect(Collectors.toList());
+                ((List<BlockpitData>) dataConverted).add(data);
+            }
         } else {
             throw new UnsupportedOperationException("Unknown Writer-Type");
         }
