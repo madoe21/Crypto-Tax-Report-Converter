@@ -69,11 +69,11 @@ public class SwissBorgConverter implements Converter {
                         break;
                     case "Sell":
                         outgoingAsset = swissBorgData.getCurrency();
-                        outgoingAmount = BlockpitData.formatValue(swissBorgData.getNetAmount());
+                        outgoingAmount = BlockpitData.formatValue(swissBorgData.getGrossAmount());
                         feeAsset = swissBorgData.getCurrency();
                         feeAmount = BlockpitData.formatValue(swissBorgData.getFee());
                         comment = swissBorgData.getNote();
-                        label = "Trade";
+                        label = "Withdrawal";
                         data = new BlockpitData(date,
                                 INTEGRATION_NAME, label, outgoingAsset, outgoingAmount,
                                 incomingAsset, incomingAmount, feeAsset, feeAmount, comment, transactionId);
@@ -81,21 +81,22 @@ public class SwissBorgConverter implements Converter {
                         break;
                     case "Buy":
                         for (BlockpitData blockpitData : (List<BlockpitData>) dataConverted) {
-                            if (StringUtils.equals(blockpitData.getLabel(), "Trade")
+                            if (StringUtils.equals(blockpitData.getLabel(), "Withdrawal")
                                     && StringUtils.equals(blockpitData.getDate(), date)) {
                                 data = blockpitData;
                             }
                         }
 
                         incomingAsset = swissBorgData.getCurrency();
-                        incomingAmount = BlockpitData.formatValue(swissBorgData.getNetAmount());
+                        incomingAmount = BlockpitData.formatValue(swissBorgData.getGrossAmount());
                         feeAsset = swissBorgData.getCurrency();
                         feeAmount = BlockpitData.formatValue(swissBorgData.getFee());
-                        label = "Trade";
+                        label = "Deposit";
 
                         if (data == null) {
                             comment = swissBorgData.getNote();
                         } else {
+                            label = "Trade";
                             outgoingAsset = data.getOutgoingAsset();
                             outgoingAmount = data.getOutgoingAmount();
                             comment = data.getComment() + "; " + swissBorgData.getNote();
