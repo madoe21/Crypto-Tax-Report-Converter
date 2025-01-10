@@ -2,6 +2,8 @@ package com.cryptotax.converter.converter;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.cryptotax.converter.data.in.KriptomatData;
@@ -42,6 +44,7 @@ public class KriptomatConverter implements Converter {
                 String outgoingAmount = "";
                 String incomingAsset = "";
                 String incomingAmount = "";
+                String pricePerCoin = "";
                 String feeAsset = "";
                 String feeAmount = "";
                 String comment = kriptomatData.getNotes();
@@ -54,14 +57,21 @@ public class KriptomatConverter implements Converter {
 
                 switch (kriptomatData.getTransactionType()) {
                     case "Buy":
-                        amountEUR = kriptomatData.getAmountEUR();
                         transactedInclusiveFees = kriptomatData.getTransactedInclusiveFees();
-                        fee = Double.valueOf(transactedInclusiveFees) - Double.valueOf(amountEUR);
+                        amountTransacted = kriptomatData.getAmountTransacted();
+                        pricePerCoin = kriptomatData.getPricePerCoin();
+                        fee = Math.round((Double.valueOf(transactedInclusiveFees) -
+                                (Double.valueOf(
+                                        amountTransacted)
+                                        * Double
+                                                .valueOf(
+                                                        pricePerCoin)))
+                                * 100.0) / 100.0;
 
                         incomingAsset = kriptomatData.getAsset();
                         incomingAmount = BlockpitData.formatValue(kriptomatData.getAmountTransacted());
                         outgoingAsset = "EUR";
-                        outgoingAmount = BlockpitData.formatValue(amountEUR);
+                        outgoingAmount = BlockpitData.formatValue(transactedInclusiveFees);
                         feeAsset = "EUR";
                         feeAmount = BlockpitData.formatValue(String.valueOf(fee));
                         label = "Trade";
@@ -101,6 +111,24 @@ public class KriptomatConverter implements Converter {
                         feeAmount = BlockpitData.formatValue(String.valueOf(fee));
                         label = "Withdrawal";
                         break;
+                    case "Exchange":
+                        amountEUR = kriptomatData.getAmountEUR();
+                        transactedInclusiveFees = kriptomatData.getTransactedInclusiveFees();
+                        fee = Double.valueOf(transactedInclusiveFees) - Double.valueOf(amountEUR);
+
+                        outgoingAsset = getCurrencyFromComment(comment);
+                        outgoingAmount = "???";
+                        incomingAsset = kriptomatData.getAsset();
+                        incomingAmount = BlockpitData.formatValue(kriptomatData.getAmountTransacted());
+                        feeAsset = "EUR";
+                        feeAmount = BlockpitData.formatValue(String.valueOf(fee));
+                        label = "Trade";
+                        break;
+                    case "Referral_rewards":
+                        incomingAsset = kriptomatData.getAsset();
+                        incomingAmount = BlockpitData.formatValue(kriptomatData.getAmountTransacted());
+                        label = "Gift Received";
+                        break;
                     default:
                         label = "Unknown";
                         comment = "Unknown transaction type";
@@ -113,6 +141,19 @@ public class KriptomatConverter implements Converter {
         } else {
             throw new UnsupportedOperationException("Unknown Writer-Type");
         }
+    }
+
+    private String getCurrencyFromComment(String notes) {
+        String result = "";
+        String regex = "(?<=von\\s)([a-zA-Z]+)(?=mit)";
+
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(notes);
+
+        if (matcher.find()) {
+            result = matcher.group(1).toUpperCase();
+        }
+        return result;
     }
 
     @Override

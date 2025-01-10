@@ -29,7 +29,7 @@ Currently supported crypto tax software:
 
 #### [Kriptomat](https://app.kriptomat.io/ref/join?referral=gyj4yh0j)
 
-- Transaction history can be created at **[Kriptomat History](https://app.kriptomat.io/settings/history)**.
+- Transaction history can be created at **[Kriptomat History](https://app.kriptomat.io/settings/history)**. ATTENTION: The transaction history is not complete and must be completed manually.
 
 ## Build project before run
 
